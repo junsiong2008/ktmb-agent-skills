@@ -15,16 +15,16 @@
     background: #0d1117;
     color: #e6edf3;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-size: 13px;
-    padding: 12px;
+    font-size: 14px;
+    padding: 14px;
   }
 
   /* ── Header ── */
   .header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 10px;
+    margin-bottom: 16px;
   }
   .ktm-badge {
     background: #1565c0;
@@ -32,114 +32,112 @@
     font-weight: 700;
     font-size: 11px;
     letter-spacing: 0.5px;
-    padding: 3px 7px;
-    border-radius: 4px;
+    padding: 4px 8px;
+    border-radius: 5px;
     flex-shrink: 0;
   }
   .header-route {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     color: #e6edf3;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.3;
+  }
+  .header-count {
+    font-size: 12px;
+    font-weight: 400;
+    color: #8b949e;
   }
   .header-sub {
-    font-size: 11px;
+    font-size: 12px;
     color: #8b949e;
-    margin-top: 1px;
+    margin-top: 2px;
   }
 
   /* ── Next train hero card ── */
   .hero {
     background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin-bottom: 10px;
+    border-radius: 12px;
+    padding: 16px 18px;
   }
-  .hero-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.75; margin-bottom: 6px; }
+  .hero-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+    margin-bottom: 8px;
+  }
   .hero-times {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
+    gap: 10px;
+    margin-bottom: 8px;
   }
-  .hero-time { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
-  .hero-arrow { font-size: 18px; opacity: 0.6; }
-  .hero-train { font-size: 11px; opacity: 0.8; }
-  .service-pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    margin-top: 6px;
-  }
+  .hero-time { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+  .hero-arrow { font-size: 20px; opacity: 0.5; }
+  .hero-meta { font-size: 12px; opacity: 0.8; margin-bottom: 8px; }
 
   /* ── Trip list ── */
-  .trip-list { display: flex; flex-direction: column; gap: 6px; }
+  .trip-list { display: flex; flex-direction: column; gap: 8px; }
 
   .trip-row {
-    display: flex;
-    align-items: center;
     background: #161b22;
     border: 1px solid #21262d;
-    border-radius: 8px;
-    padding: 9px 12px;
-    gap: 10px;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  /* Top line: times on left, pill on right */
+  .trip-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
   }
   .trip-times {
     display: flex;
     align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-    min-width: 120px;
+    gap: 8px;
   }
-  .trip-time { font-size: 15px; font-weight: 700; color: #e6edf3; font-variant-numeric: tabular-nums; }
-  .trip-arrow { font-size: 12px; color: #8b949e; }
-  .trip-meta { flex: 1; overflow: hidden; }
-  .trip-train { font-size: 11px; color: #8b949e; }
-  .trip-dest {
-    font-size: 11px;
+  .trip-time {
+    font-size: 18px;
+    font-weight: 700;
+    color: #e6edf3;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.3px;
+  }
+  .trip-arrow { font-size: 13px; color: #484f58; }
+
+  /* Bottom line: train number + headsign */
+  .trip-bottom {
+    font-size: 12px;
     color: #8b949e;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
   }
+
+  /* Service pill */
   .pill {
     display: inline-block;
-    padding: 2px 7px;
+    padding: 3px 9px;
     border-radius: 20px;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.3px;
     flex-shrink: 0;
+    white-space: nowrap;
   }
+  .svc-komuter   { background: #1b5e20; color: #a5d6a7; }
+  .svc-ets       { background: #e65100; color: #ffccbc; }
+  .svc-intercity { background: #4a148c; color: #e1bee7; }
+  .svc-ktm       { background: #1565c0; color: #bbdefb; }
 
-  /* Service colours */
-  .svc-komuter  { background: #1b5e20; color: #a5d6a7; }
-  .svc-ets      { background: #e65100; color: #ffccbc; }
-  .svc-intercity{ background: #4a148c; color: #e1bee7; }
-  .svc-ktm      { background: #1565c0; color: #bbdefb; }
-
-  /* ── Departure board header ── */
-  .board-header {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 12px 6px;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: #484f58;
-  }
-
-  /* ── Error / empty state ── */
+  /* ── Empty state ── */
   .empty {
     text-align: center;
-    padding: 24px 16px;
+    padding: 32px 16px;
     color: #8b949e;
-    font-size: 13px;
+    font-size: 14px;
   }
 </style>
 </head>
@@ -155,7 +153,7 @@
     return "svc-ktm";
   }
 
-  function pillHTML(service) {
+  function pill(service) {
     return `<span class="pill ${svcClass(service)}">${service}</span>`;
   }
 
@@ -178,30 +176,29 @@
           </div>
         </div>
         <div class="hero">
-          <div class="hero-label">Next Train · ${t.train}</div>
+          <div class="hero-label">Train ${t.train}</div>
           <div class="hero-times">
             <span class="hero-time">${t.departs}</span>
             <span class="hero-arrow">→</span>
             <span class="hero-time">${t.arrives}</span>
           </div>
-          ${t.headsign ? `<div class="hero-train">towards ${t.headsign}</div>` : ""}
-          ${pillHTML(t.service)}
+          ${t.headsign ? `<div class="hero-meta">towards ${t.headsign}</div>` : ""}
+          ${pill(t.service)}
         </div>
       `;
       return;
     }
 
-    // search_trains and departure_board share the list layout
     let headerHTML = "";
     if (data.view === "search_trains") {
-      const totalNote = data.total > data.trips.length
-        ? ` <span style="color:#8b949e;font-weight:400">(showing ${data.trips.length} of ${data.total})</span>`
+      const countNote = data.total > data.trips.length
+        ? `<span class="header-count"> (${data.trips.length} of ${data.total})</span>`
         : "";
       headerHTML = `
         <div class="header">
           <span class="ktm-badge">KTM</span>
           <div>
-            <div class="header-route">${data.from} → ${data.to}${totalNote}</div>
+            <div class="header-route">${data.from} → ${data.to}${countNote}</div>
             <div class="header-sub">${data.date}</div>
           </div>
         </div>
@@ -218,29 +215,28 @@
       `;
     }
 
-    const colsHTML = `
-      <div class="board-header">
-        <span>Departs → Arrives</span>
-        <span>Train · Service</span>
-      </div>
-    `;
+    const rowsHTML = data.trips.map(t => {
+      const bottom = [
+        `Train ${t.train}`,
+        t.headsign ? `· ${t.headsign}` : null,
+      ].filter(Boolean).join(" ");
 
-    const rowsHTML = data.trips.map(t => `
-      <div class="trip-row">
-        <div class="trip-times">
-          <span class="trip-time">${t.departs}</span>
-          <span class="trip-arrow">→</span>
-          <span class="trip-time">${t.arrives || "—"}</span>
+      return `
+        <div class="trip-row">
+          <div class="trip-top">
+            <div class="trip-times">
+              <span class="trip-time">${t.departs}</span>
+              <span class="trip-arrow">→</span>
+              <span class="trip-time">${t.arrives || "—"}</span>
+            </div>
+            ${pill(t.service)}
+          </div>
+          <div class="trip-bottom">${bottom}</div>
         </div>
-        <div class="trip-meta">
-          <div class="trip-train">Train ${t.train}</div>
-          ${t.headsign ? `<div class="trip-dest">→ ${t.headsign}</div>` : ""}
-        </div>
-        ${pillHTML(t.service)}
-      </div>
-    `).join("");
+      `;
+    }).join("");
 
-    root.innerHTML = headerHTML + colsHTML + `<div class="trip-list">${rowsHTML}</div>`;
+    root.innerHTML = headerHTML + `<div class="trip-list">${rowsHTML}</div>`;
   }
 
   try {
