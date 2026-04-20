@@ -40,7 +40,7 @@ function resolveDate(input) {
     const myTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
     const todayDay = myTime.getUTCDay();
     let daysAhead = targetDay - todayDay;
-    if (daysAhead <= 0) daysAhead += 7; // always the upcoming occurrence
+    if (daysAhead < 0) daysAhead += 7; // wrap to next week only if already passed
     return malaysiaDate(daysAhead);
   }
 

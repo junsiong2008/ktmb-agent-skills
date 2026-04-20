@@ -30,7 +30,7 @@ Call the `run_js` tool with script `index.html` and a JSON `data` parameter. Alw
 ### `action: "search_trains"` — all trips on a given date
 - **from**: Required. Departure station name.
 - **to**: Required. Destination station name.
-- **date**: Optional. The date the user mentioned, passed through exactly as stated — do NOT resolve or convert it yourself. Pass `"today"`, `"tomorrow"`, a day name like `"Monday"` or `"this Friday"`, or an already-absolute `"YYYY-MM-DD"` string. Omit entirely if the user gave no date. The script resolves all of these to the correct Malaysia date automatically.
+- **date**: Optional. The date the user mentioned, passed through exactly as stated — do NOT resolve or convert it yourself. Pass `"today"`, `"tomorrow"`, a bare day name like `"Monday"` or `"Friday"`, or an already-absolute `"YYYY-MM-DD"` string. Omit entirely if the user gave no date. The script resolves all of these to the correct Malaysia date automatically.
 - **time**: Optional. Earliest departure time as `HH:MM:SS` (e.g. `"14:00:00"`). Include when user says "after X pm".
 - **service_type**: Optional.
 
