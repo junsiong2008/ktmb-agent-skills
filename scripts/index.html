@@ -10,10 +10,42 @@
 const API_BASE = "https://ktmb-api-769756648802.us-central1.run.app/api";
 const STORAGE_KEY = "ktmb_last_result";
 
-function malaysiaToday() {
+function malaysiaDate(offsetDays = 0) {
   const now = new Date();
-  const myTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  const myTime = new Date(now.getTime() + 8 * 60 * 60 * 1000 + offsetDays * 86400000);
   return myTime.toISOString().slice(0, 10);
+}
+
+// Resolves any user-supplied date string to YYYY-MM-DD in Malaysia time.
+// Handles: omitted/null → today, "today", "tomorrow", day names ("Monday",
+// "this Friday", "next Wednesday"), or a passthrough YYYY-MM-DD string.
+function resolveDate(input) {
+  if (!input) return malaysiaDate();
+
+  const s = input.trim().toLowerCase();
+  if (s === "today") return malaysiaDate();
+  if (s === "tomorrow") return malaysiaDate(1);
+  if (s === "yesterday") return malaysiaDate(-1);
+
+  // Already an absolute date
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+  // Day name resolution — find the next occurrence of the named weekday
+  const DAY_NAMES = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+  // Strip optional "this"/"next" prefix before the day name
+  const dayWord = s.replace(/^(this|next)\s+/, "");
+  const targetDay = DAY_NAMES.indexOf(dayWord);
+  if (targetDay !== -1) {
+    const now = new Date();
+    const myTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    const todayDay = myTime.getUTCDay();
+    let daysAhead = targetDay - todayDay;
+    if (daysAhead <= 0) daysAhead += 7; // always the upcoming occurrence
+    return malaysiaDate(daysAhead);
+  }
+
+  // Fallback: return as-is and let the API handle or reject it
+  return input.trim();
 }
 
 function formatTime(t) {
@@ -99,7 +131,7 @@ async function nextTrain({ from, to, service_type }) {
 
 async function searchTrains({ from, to, date, time, service_type }) {
   if (!from || !to) return { error: "Both 'from' and 'to' are required." };
-  const resolvedDate = date || malaysiaToday();
+  const resolvedDate = resolveDate(date);
   const stations = await fetchStations(service_type);
   const fromSt = fuzzyMatch(from, stations);
   const toSt = fuzzyMatch(to, stations);
@@ -112,9 +144,11 @@ async function searchTrains({ from, to, date, time, service_type }) {
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
-  const trips = await res.json();
+  const body = await res.json();
+  // API wraps results: { day_type, trips: [...] }
+  const trips = Array.isArray(body) ? body : (body.trips || []);
 
-  if (!trips || trips.length === 0) {
+  if (trips.length === 0) {
     return { result: `No trains found from ${fromSt.stop_name} to ${toSt.stop_name} on ${resolvedDate}.` };
   }
 
