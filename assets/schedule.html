@@ -72,6 +72,12 @@
     letter-spacing: -0.3px;
   }
 
+  /* Service-type colours — badge + dot */
+  [data-service="ETS"] .train-badge    { background: #2d2200; color: #fbbf24; }
+  [data-service="ETS"] .route-dot      { background: #fbbf24; }
+  [data-service="Intercity"] .train-badge { background: #1a1033; color: #c084fc; }
+  [data-service="Intercity"] .route-dot   { background: #c084fc; }
+
   /* Destination + route label */
   .trip-info { flex: 1; overflow: hidden; min-width: 0; }
   .trip-dest {
@@ -216,7 +222,7 @@
       : `Train ${t.train}`;
 
     return `
-      <div class="trip-row">
+      <div class="trip-row" data-service="${t.service}">
         <div class="train-badge">${t.train}</div>
         <div class="trip-info">
           <div class="trip-dest">${dest}</div>
