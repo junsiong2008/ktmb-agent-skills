@@ -1,0 +1,213 @@
+<!--
+  Copyright 2026 KTMB0t
+  Licensed under the Apache License, Version 2.0
+-->
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<script>
+const API_BASE = "https://ktmb-api-769756648802.us-central1.run.app/api";
+const STORAGE_KEY = "ktmb_last_result";
+
+function malaysiaToday() {
+  const now = new Date();
+  const myTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  return myTime.toISOString().slice(0, 10);
+}
+
+function formatTime(t) {
+  if (!t) return "N/A";
+  return t.length > 5 ? t.slice(0, 5) : t;
+}
+
+function fuzzyMatch(query, stations) {
+  const q = query.toLowerCase().trim();
+  let m = stations.find(s => s.stop_name.toLowerCase() === q);
+  if (m) return m;
+  m = stations.find(s => s.stop_name.toLowerCase().startsWith(q));
+  if (m) return m;
+  m = stations.find(s => s.stop_name.toLowerCase().includes(q));
+  if (m) return m;
+  const tokens = q.split(/\s+/);
+  let best = null, bestScore = 0;
+  for (const s of stations) {
+    const name = s.stop_name.toLowerCase();
+    const score = tokens.filter(t => name.includes(t)).length;
+    if (score > bestScore) { bestScore = score; best = s; }
+  }
+  return bestScore > 0 ? best : null;
+}
+
+async function fetchStations(service_type) {
+  const url = service_type
+    ? `${API_BASE}/stations?service_type=${encodeURIComponent(service_type)}`
+    : `${API_BASE}/stations`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch stations.");
+  return res.json();
+}
+
+function trainNum(trip_id) {
+  return trip_id ? trip_id.replace(/^(weekday|weekend)_/i, "") : "?";
+}
+
+function serviceTag(t) {
+  return t.route_short_name || t.route_long_name || "KTM";
+}
+
+async function nextTrain({ from, to, service_type }) {
+  if (!from || !to) return { error: "Both 'from' and 'to' are required." };
+  const stations = await fetchStations(service_type);
+  const fromSt = fuzzyMatch(from, stations);
+  const toSt = fuzzyMatch(to, stations);
+  if (!fromSt) return { error: `Could not find a station matching "${from}".` };
+  if (!toSt) return { error: `Could not find a station matching "${to}".` };
+
+  const res = await fetch(`${API_BASE}/schedule/next?from=${encodeURIComponent(fromSt.stop_id)}&to=${encodeURIComponent(toSt.stop_id)}`);
+  if (res.status === 404) return { result: `No upcoming trains from ${fromSt.stop_name} to ${toSt.stop_name} today.` };
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+
+  const trip = await res.json();
+  const t = Array.isArray(trip) ? trip[0] : trip;
+  if (!t) return { result: `No upcoming trains from ${fromSt.stop_name} to ${toSt.stop_name} today.` };
+
+  const payload = {
+    view: "next_train",
+    from: fromSt.stop_name,
+    to: toSt.stop_name,
+    trips: [{
+      train: trainNum(t.trip_id),
+      service: serviceTag(t),
+      departs: formatTime(t.departure_time),
+      arrives: formatTime(t.arrival_time),
+      headsign: t.trip_headsign || null,
+    }],
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+
+  const textLines = [
+    `Next train from ${fromSt.stop_name} to ${toSt.stop_name}:`,
+    `• Train: ${payload.trips[0].train} (${payload.trips[0].service})`,
+    `• Departs: ${payload.trips[0].departs}`,
+    `• Arrives: ${payload.trips[0].arrives}`,
+    payload.trips[0].headsign ? `• Direction: ${payload.trips[0].headsign}` : null,
+  ].filter(Boolean);
+
+  return { result: textLines.join("\n"), webview: { url: "schedule.html", aspectRatio: 0.6 } };
+}
+
+async function searchTrains({ from, to, date, time, service_type }) {
+  if (!from || !to) return { error: "Both 'from' and 'to' are required." };
+  const resolvedDate = date || malaysiaToday();
+  const stations = await fetchStations(service_type);
+  const fromSt = fuzzyMatch(from, stations);
+  const toSt = fuzzyMatch(to, stations);
+  if (!fromSt) return { error: `Could not find a station matching "${from}".` };
+  if (!toSt) return { error: `Could not find a station matching "${to}".` };
+
+  let url = `${API_BASE}/schedule/search?from=${encodeURIComponent(fromSt.stop_id)}&to=${encodeURIComponent(toSt.stop_id)}&date=${encodeURIComponent(resolvedDate)}`;
+  if (time) url += `&time=${encodeURIComponent(time)}`;
+  if (service_type) url += `&service_type=${encodeURIComponent(service_type)}`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  const trips = await res.json();
+
+  if (!trips || trips.length === 0) {
+    return { result: `No trains found from ${fromSt.stop_name} to ${toSt.stop_name} on ${resolvedDate}.` };
+  }
+
+  const total = trips.length;
+  const shown = trips.slice(0, 12);
+
+  const payload = {
+    view: "search_trains",
+    from: fromSt.stop_name,
+    to: toSt.stop_name,
+    date: resolvedDate,
+    total,
+    trips: shown.map(t => ({
+      train: trainNum(t.trip_id),
+      service: serviceTag(t),
+      departs: formatTime(t.departure_time),
+      arrives: formatTime(t.arrival_time),
+      headsign: t.trip_headsign || null,
+    })),
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+
+  const textLines = shown.map(t => {
+    const svc = t.route_short_name || t.route_long_name || "KTM";
+    return `• ${formatTime(t.departure_time)} → ${formatTime(t.arrival_time)}  Train ${trainNum(t.trip_id)} (${svc})`;
+  });
+
+  let result = `Trains from ${fromSt.stop_name} to ${toSt.stop_name} on ${resolvedDate}:\n\n` + textLines.join("\n");
+  if (total > 12) result += `\n\n...and ${total - 12} more. Add a time filter to narrow results.`;
+
+  return { result, webview: { url: "schedule.html", aspectRatio: Math.min(0.5 + shown.length * 0.07, 1.5) } };
+}
+
+async function departureBoard({ station, direction, service_type }) {
+  if (!station) return { error: "A 'station' name is required." };
+  const stations = await fetchStations(service_type);
+  const matched = fuzzyMatch(station, stations);
+  if (!matched) return { error: `Could not find a station matching "${station}".` };
+
+  let url = `${API_BASE}/schedule/list?from=${encodeURIComponent(matched.stop_id)}`;
+  if (direction) url += `&direction=${encodeURIComponent(direction)}`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  const departures = await res.json();
+
+  if (!departures || departures.length === 0) {
+    return { result: `No upcoming departures found from ${matched.stop_name}.` };
+  }
+
+  const shown = departures.slice(0, 12);
+
+  const payload = {
+    view: "departure_board",
+    station: matched.stop_name,
+    trips: shown.map(d => ({
+      train: trainNum(d.trip_id),
+      service: serviceTag(d),
+      departs: formatTime(d.departure_time),
+      arrives: formatTime(d.arrival_time),
+      headsign: d.trip_headsign || null,
+    })),
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+
+  const textLines = shown.map(d => {
+    const svc = d.route_short_name || d.route_long_name || "KTM";
+    const dest = d.trip_headsign ? ` → ${d.trip_headsign}` : "";
+    return `• ${formatTime(d.departure_time)}  Train ${trainNum(d.trip_id)}  ${svc}${dest}`;
+  });
+
+  return {
+    result: `Departures from ${matched.stop_name}:\n\n` + textLines.join("\n"),
+    webview: { url: "schedule.html", aspectRatio: Math.min(0.5 + shown.length * 0.07, 1.5) },
+  };
+}
+
+window["ai_edge_gallery_get_result"] = async (data) => {
+  try {
+    const input = JSON.parse(data);
+    const { action } = input;
+
+    let response;
+    if (action === "next_train") response = await nextTrain(input);
+    else if (action === "search_trains") response = await searchTrains(input);
+    else if (action === "departure_board") response = await departureBoard(input);
+    else response = { error: `Unknown action "${action}". Use "next_train", "search_trains", or "departure_board".` };
+
+    return JSON.stringify(response);
+  } catch (err) {
+    return JSON.stringify({ error: err.message || "An unexpected error occurred." });
+  }
+};
+</script>
+</body>
+</html>

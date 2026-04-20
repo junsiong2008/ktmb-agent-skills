@@ -1,0 +1,254 @@
+<!--
+  Copyright 2026 KTMB0t
+  Licensed under the Apache License, Version 2.0
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KTMB Schedule</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d1117;
+    color: #e6edf3;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .ktm-badge {
+    background: #1565c0;
+    color: #fff;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .header-route {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e6edf3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .header-sub {
+    font-size: 11px;
+    color: #8b949e;
+    margin-top: 1px;
+  }
+
+  /* ── Next train hero card ── */
+  .hero {
+    background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .hero-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.75; margin-bottom: 6px; }
+  .hero-times {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .hero-time { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .hero-arrow { font-size: 18px; opacity: 0.6; }
+  .hero-train { font-size: 11px; opacity: 0.8; }
+  .service-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    margin-top: 6px;
+  }
+
+  /* ── Trip list ── */
+  .trip-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .trip-row {
+    display: flex;
+    align-items: center;
+    background: #161b22;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 9px 12px;
+    gap: 10px;
+  }
+  .trip-times {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    min-width: 120px;
+  }
+  .trip-time { font-size: 15px; font-weight: 700; color: #e6edf3; font-variant-numeric: tabular-nums; }
+  .trip-arrow { font-size: 12px; color: #8b949e; }
+  .trip-meta { flex: 1; overflow: hidden; }
+  .trip-train { font-size: 11px; color: #8b949e; }
+  .trip-dest {
+    font-size: 11px;
+    color: #8b949e;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pill {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+  }
+
+  /* Service colours */
+  .svc-komuter  { background: #1b5e20; color: #a5d6a7; }
+  .svc-ets      { background: #e65100; color: #ffccbc; }
+  .svc-intercity{ background: #4a148c; color: #e1bee7; }
+  .svc-ktm      { background: #1565c0; color: #bbdefb; }
+
+  /* ── Departure board header ── */
+  .board-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 12px 6px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #484f58;
+  }
+
+  /* ── Error / empty state ── */
+  .empty {
+    text-align: center;
+    padding: 24px 16px;
+    color: #8b949e;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<script>
+  const STORAGE_KEY = "ktmb_last_result";
+
+  function svcClass(service) {
+    const s = (service || "").toLowerCase();
+    if (s.includes("komuter")) return "svc-komuter";
+    if (s.includes("ets")) return "svc-ets";
+    if (s.includes("intercity")) return "svc-intercity";
+    return "svc-ktm";
+  }
+
+  function pillHTML(service) {
+    return `<span class="pill ${svcClass(service)}">${service}</span>`;
+  }
+
+  function render(data) {
+    const root = document.body;
+
+    if (!data || !data.trips || data.trips.length === 0) {
+      root.innerHTML = `<div class="empty">No schedule data available.</div>`;
+      return;
+    }
+
+    if (data.view === "next_train") {
+      const t = data.trips[0];
+      root.innerHTML = `
+        <div class="header">
+          <span class="ktm-badge">KTM</span>
+          <div>
+            <div class="header-route">${data.from} → ${data.to}</div>
+            <div class="header-sub">Next departure</div>
+          </div>
+        </div>
+        <div class="hero">
+          <div class="hero-label">Next Train · ${t.train}</div>
+          <div class="hero-times">
+            <span class="hero-time">${t.departs}</span>
+            <span class="hero-arrow">→</span>
+            <span class="hero-time">${t.arrives}</span>
+          </div>
+          ${t.headsign ? `<div class="hero-train">towards ${t.headsign}</div>` : ""}
+          ${pillHTML(t.service)}
+        </div>
+      `;
+      return;
+    }
+
+    // search_trains and departure_board share the list layout
+    let headerHTML = "";
+    if (data.view === "search_trains") {
+      const totalNote = data.total > data.trips.length
+        ? ` <span style="color:#8b949e;font-weight:400">(showing ${data.trips.length} of ${data.total})</span>`
+        : "";
+      headerHTML = `
+        <div class="header">
+          <span class="ktm-badge">KTM</span>
+          <div>
+            <div class="header-route">${data.from} → ${data.to}${totalNote}</div>
+            <div class="header-sub">${data.date}</div>
+          </div>
+        </div>
+      `;
+    } else {
+      headerHTML = `
+        <div class="header">
+          <span class="ktm-badge">KTM</span>
+          <div>
+            <div class="header-route">${data.station}</div>
+            <div class="header-sub">Upcoming departures</div>
+          </div>
+        </div>
+      `;
+    }
+
+    const colsHTML = `
+      <div class="board-header">
+        <span>Departs → Arrives</span>
+        <span>Train · Service</span>
+      </div>
+    `;
+
+    const rowsHTML = data.trips.map(t => `
+      <div class="trip-row">
+        <div class="trip-times">
+          <span class="trip-time">${t.departs}</span>
+          <span class="trip-arrow">→</span>
+          <span class="trip-time">${t.arrives || "—"}</span>
+        </div>
+        <div class="trip-meta">
+          <div class="trip-train">Train ${t.train}</div>
+          ${t.headsign ? `<div class="trip-dest">→ ${t.headsign}</div>` : ""}
+        </div>
+        ${pillHTML(t.service)}
+      </div>
+    `).join("");
+
+    root.innerHTML = headerHTML + colsHTML + `<div class="trip-list">${rowsHTML}</div>`;
+  }
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    render(raw ? JSON.parse(raw) : null);
+  } catch (e) {
+    document.body.innerHTML = `<div class="empty">Failed to load schedule data.</div>`;
+  }
+</script>
+</body>
+</html>
