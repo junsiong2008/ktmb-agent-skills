@@ -230,14 +230,15 @@
             <div class="time-val">${t.departs}</div>
             <div class="time-label">Departure</div>
           </div>
+          ${dur ? `
           <div class="duration-block">
-            ${dur ? `<span class="duration-pill">${dur}</span>` : ""}
+            <span class="duration-pill">${dur}</span>
             <span class="duration-arrow">→</span>
           </div>
           <div class="time-block">
-            <div class="time-val">${t.arrives || "—"}</div>
+            <div class="time-val">${t.arrives}</div>
             <div class="time-label">Arrival</div>
-          </div>
+          </div>` : ""}
         </div>
       </div>
     `;
