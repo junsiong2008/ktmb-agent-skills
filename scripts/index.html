@@ -90,13 +90,15 @@ function serviceTag(t) {
 
 async function nextTrain({ from, to, service_type }) {
   if (!from || !to) return { error: "Both 'from' and 'to' are required." };
-  const stations = await fetchStations(service_type);
+  const stations = await fetchStations();
   const fromSt = fuzzyMatch(from, stations);
   const toSt = fuzzyMatch(to, stations);
   if (!fromSt) return { error: `Could not find a station matching "${from}".` };
   if (!toSt) return { error: `Could not find a station matching "${to}".` };
 
-  const res = await fetch(`${API_BASE}/schedule/next?from=${encodeURIComponent(fromSt.stop_id)}&to=${encodeURIComponent(toSt.stop_id)}`);
+  let nextUrl = `${API_BASE}/schedule/next?from=${encodeURIComponent(fromSt.stop_id)}&to=${encodeURIComponent(toSt.stop_id)}`;
+  if (service_type) nextUrl += `&service_type=${encodeURIComponent(service_type)}`;
+  const res = await fetch(nextUrl);
   if (res.status === 404) return { result: `No upcoming trains from ${fromSt.stop_name} to ${toSt.stop_name} today.` };
   if (!res.ok) throw new Error(`API error: ${res.status}`);
 
@@ -132,7 +134,7 @@ async function nextTrain({ from, to, service_type }) {
 async function searchTrains({ from, to, date, time, service_type }) {
   if (!from || !to) return { error: "Both 'from' and 'to' are required." };
   const resolvedDate = resolveDate(date);
-  const stations = await fetchStations(service_type);
+  const stations = await fetchStations();
   const fromSt = fuzzyMatch(from, stations);
   const toSt = fuzzyMatch(to, stations);
   if (!fromSt) return { error: `Could not find a station matching "${from}".` };
@@ -184,12 +186,13 @@ async function searchTrains({ from, to, date, time, service_type }) {
 
 async function departureBoard({ station, direction, service_type }) {
   if (!station) return { error: "A 'station' name is required." };
-  const stations = await fetchStations(service_type);
+  const stations = await fetchStations();
   const matched = fuzzyMatch(station, stations);
   if (!matched) return { error: `Could not find a station matching "${station}".` };
 
   let url = `${API_BASE}/schedule/list?from=${encodeURIComponent(matched.stop_id)}`;
   if (direction) url += `&direction=${encodeURIComponent(direction)}`;
+  if (service_type) url += `&service_type=${encodeURIComponent(service_type)}`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(`API error: ${res.status}`);

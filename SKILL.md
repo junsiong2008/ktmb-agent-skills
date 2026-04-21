@@ -40,9 +40,9 @@ Call the `run_js` tool with script `index.html` and a JSON `data` parameter. Alw
 - **service_type**: Optional.
 
 **Choosing the right action:**
-- Use `next_train` when the user asks for "the next train" or "when is the next train".
+- Use `next_train` when the user asks for "the next train" or "when is the next train" between two clearly named stations.
 - Use `search_trains` when the user asks to "show all trains", "list trains", or specifies a date/time.
-- Use `departure_board` when only one station is mentioned (no destination).
+- Use `departure_board` when only one station is mentioned, OR when the user asks what is leaving/departing a station (even if a direction or loose destination is mentioned — pass that as `direction`, not as a second station). Examples: "trains leaving Ipoh towards KL", "what's leaving Butterworth", "departures from Subang Jaya going north".
 
 **Response instructions:**
 - Present results as a concise, friendly list. Include train number, departure time, arrival time, and service name.
