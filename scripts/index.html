@@ -255,6 +255,15 @@ window["ai_edge_gallery_get_result"] = async (data) => {
     const input = JSON.parse(data);
     let { action } = input;
 
+    // Normalize action string — the model sometimes uses camelCase, kebab-case,
+    // or partial names (e.g. "nextTrain", "next-train", "search", "board").
+    if (action) {
+      const a = action.toLowerCase().replace(/[-_\s]/g, "");
+      if (a === "nexttrain" || a === "next") action = "next_train";
+      else if (a === "searchtrains" || a === "search" || a === "trains") action = "search_trains";
+      else if (a === "departureboard" || a === "departure" || a === "board") action = "departure_board";
+    }
+
     // Infer action from parameters when the model omits it
     if (!action) {
       if (input.from && input.to) {
@@ -264,9 +273,20 @@ window["ai_edge_gallery_get_result"] = async (data) => {
       }
     }
 
+    // Normalize: departure_board expects `station`, but the model sometimes
+    // passes `from` (or `to`) instead. Map whichever is present.
+    if (action === "departure_board" && !input.station) {
+      input.station = input.from || input.to;
+    }
+
     let response;
-    if (action === "next_train") response = await nextTrain(input);
-    else if (action === "search_trains") response = await searchTrains(input);
+    if (action === "next_train") {
+      response = await nextTrain(input);
+      // If no upcoming trains found today, fall back to the full day schedule
+      if (response.result && response.result.startsWith("No upcoming trains")) {
+        response = await searchTrains({ ...input, date: input.date || malaysiaDate() });
+      }
+    } else if (action === "search_trains") response = await searchTrains(input);
     else if (action === "departure_board") response = await departureBoard(input);
     else response = { error: `Unknown action "${action}". Use "next_train", "search_trains", or "departure_board".` };
 
