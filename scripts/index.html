@@ -85,6 +85,10 @@ function trainNum(trip_id) {
 }
 
 function serviceTag(t) {
+  const raw = (t.route_short_name || t.route_long_name || "").toLowerCase();
+  if (raw.includes("ets")) return "ETS";
+  if (raw.includes("intercity") || raw.includes("interciti")) return "Intercity";
+  if (raw.includes("komuter")) return "Komuter";
   return t.route_short_name || t.route_long_name || "KTM";
 }
 
