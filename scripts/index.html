@@ -98,6 +98,9 @@ function serviceTag(t) {
   if (raw.includes("ets")) return "ETS";
   if (raw.includes("intercity") || raw.includes("interciti")) return "Intercity";
   if (raw.includes("komuter")) return "Komuter";
+  // Fallback: infer from train number prefix (EP/EG = ETS)
+  const num = trainNum(t.trip_id).toUpperCase();
+  if (/^E[PG]/.test(num)) return "ETS";
   return t.route_short_name || t.route_long_name || "KTM";
 }
 
