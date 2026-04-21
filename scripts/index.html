@@ -77,7 +77,18 @@ async function fetchStations(service_type) {
     : `${API_BASE}/stations`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch stations.");
-  return res.json();
+  const all = await res.json();
+  if (service_type) return all;
+  // Deduplicate by stop_name — the unfiltered list may contain the same
+  // station once per service type with different stop_ids; keep the first
+  // occurrence so fuzzy matching returns a stable, consistent candidate.
+  const seen = new Set();
+  return all.filter(s => {
+    const key = s.stop_name.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function trainNum(trip_id) {
@@ -236,7 +247,16 @@ async function departureBoard({ station, direction, service_type }) {
 window["ai_edge_gallery_get_result"] = async (data) => {
   try {
     const input = JSON.parse(data);
-    const { action } = input;
+    let { action } = input;
+
+    // Infer action from parameters when the model omits it
+    if (!action) {
+      if (input.from && input.to) {
+        action = (input.date || input.time) ? "search_trains" : "next_train";
+      } else {
+        action = "departure_board";
+      }
+    }
 
     let response;
     if (action === "next_train") response = await nextTrain(input);
