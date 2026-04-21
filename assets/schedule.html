@@ -153,6 +153,8 @@
     border-radius: 12px;
     padding: 14px 16px;
   }
+  .hero[data-service="ETS"]       { background: linear-gradient(135deg, #78350f 0%, #451a03 100%); }
+  .hero[data-service="Intercity"] { background: linear-gradient(135deg, #3b0764 0%, #1e0545 100%); }
   .hero-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin-bottom: 8px; }
   .hero-row {
     display: flex;
@@ -272,7 +274,7 @@
             <div class="header-sub">Next departure</div>
           </div>
         </div>
-        <div class="hero">
+        <div class="hero" data-service="${t.service}">
           <div class="hero-row">
             <div class="hero-badge">${t.train}</div>
             <div class="hero-info">
